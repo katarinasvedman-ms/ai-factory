@@ -31,3 +31,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: az bicep build --file infra/main.bicep --stdout > /dev/null
+      - run: az bicep build --file infra/coder.bicep --stdout > /dev/null

@@ -253,10 +253,60 @@ Do not put secrets into ordinary Bicep parameters or request JSON.
 requiring current source configuration. The template disables automatic job
 retries so retries cannot accidentally create unrelated new executions.
 
-No ACA deployment was performed. The template compiles. Local image validation
-is currently blocked by Docker's TLS handshake failures downloading Python
-packages from `files.pythonhosted.org`; TLS verification was not disabled.
-Fix the container build network/trust configuration before deploying.
+Local Docker builds can encounter TLS handshake failures downloading Python
+packages from `files.pythonhosted.org`; TLS verification must not be disabled.
+ACR Tasks can build the image in Azure instead.
+
+### Coder-only job
+
+`infra\coder.bicep` provisions a manually triggered coder-only job and supporting
+resources: a consumption environment, Basic ACR, a dedicated managed identity,
+Key Vault, and a 10 GiB Azure Files share. It reuses an existing Foundry project
+and Log Analytics workspace in the resource group. The identity receives ACR
+pull, Key Vault secret read, project-level Foundry User, and SMB managed-identity
+storage access. Foundry User is not a toolbox-scoped isolation boundary.
+
+Storage account keys are disabled. The environment uses the preview Azure Files
+SMB managed-identity mount API; mount ownership matches the container's UID 10001.
+Fixture uploads and artifact downloads use Entra authentication with
+`--auth-mode login --backup-intent` and an appropriately scoped Storage File
+Data Privileged Contributor role. File-share data RBAC scopes use
+`fileServices/default/fileshares/SHARE`, not the management-plane `shares` path.
+
+Provide `foundryAccountName`, `foundryProjectName`, `logAnalyticsWorkspaceName`,
+`skillPolicy`, and `changeRequest` in a local deployment parameters file. The
+policy must explicitly permit the desired skills for `coder`. Bootstrap first:
+
+```powershell
+az deployment group create --resource-group YOUR_RG `
+  --template-file .\infra\coder.bicep --parameters '@YOUR_PARAMETERS.json'
+
+az acr build --registry YOUR_REGISTRY --image ai-factory-coder:YOUR_TAG .
+az acr repository show --name YOUR_REGISTRY --image ai-factory-coder:YOUR_TAG `
+  --query digest --output tsv
+
+az deployment group create --resource-group YOUR_RG `
+  --template-file .\infra\coder.bicep --parameters '@YOUR_PARAMETERS.json' `
+  deployJob=true image=YOUR_REGISTRY.azurecr.io/ai-factory-coder@sha256:YOUR_DIGEST
+```
+
+Upload the bounded target snapshot to `artifacts/inputs/target` on the file
+share before starting the job. The initial job prepares an execution without
+model calls. After verifying preparation, provision a dedicated Copilot
+credential as the Key Vault secret `copilot-token` and redeploy with
+`enableLive=true`. Only then manually start a live execution. Tokens stay in
+Key Vault; no repository-read credential is needed for this Foundry-only job.
+Automatic retries remain disabled, and the coder can create only
+approval-required proposals, not apply changes or execute commands.
+
+On 2026-11-13, the coder-only job was deployed in Sweden Central. An ACR Tasks
+image build, preparation-only execution, and one live Copilot SDK evaluation
+succeeded. The live coder activated `.NET` and test-strategy through its pinned
+Foundry Toolbox and produced an approval-required `OrderService.cs` proposal.
+Downloaded artifacts verified the managed identity, native activation events,
+provider cleanup, and unchanged input and target snapshots. Application builds
+and tests were not run. Environment-specific deployment parameters and evidence
+remain in ignored local `.artifacts\coder-deployment`, not in source control.
 
 ## Verified PoC state
 

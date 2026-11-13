@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -183,3 +184,29 @@ def test_job_resume_needs_no_current_distribution_configuration(execution, monke
     monkeypatch.delenv("FACTORY_LIVE", raising=False)
     main()
     assert json.loads(capsys.readouterr().out)["status"] == "prepared"
+
+
+def test_job_prepares_only_configured_coder(
+    target, library, request_data, tmp_path, monkeypatch, capsys
+):
+    from ai_factory.job import main
+
+    configuration = {
+        "FACTORY_ARTIFACT_ROOT": str(tmp_path / "jobs"),
+        "FACTORY_SOURCE": json.dumps({"kind": "local", "path": str(library)}),
+        "FACTORY_TARGET": str(target),
+        "FACTORY_REQUEST": json.dumps(request_data),
+        "FACTORY_POLICY": json.dumps({"allowed_skills": ["dotnet-development"]}),
+        "FACTORY_ROLES": '["coder"]',
+        "FACTORY_TASKS": '["implementation"]',
+    }
+    for key, value in configuration.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.delenv("FACTORY_RESUME_EXECUTION", raising=False)
+    monkeypatch.delenv("FACTORY_LIVE", raising=False)
+    main()
+    result = json.loads(capsys.readouterr().out)
+    manifest = verify(Path(result["execution"]))
+    assert manifest["roles"] == ["coder"]
+    assert manifest["assignments"] == {"coder": ["dotnet-development"]}
+    assert result["status"] == "prepared"
