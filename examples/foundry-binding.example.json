@@ -1,0 +1,17 @@
+{
+  "project_endpoint": "https://YOUR-ACCOUNT.services.ai.azure.com/api/projects/YOUR-PROJECT",
+  "toolbox": "factory-skills",
+  "version": "1",
+  "skills": {
+    "architecture-analysis": "1",
+    "implementation-planning": "1",
+    "code-review": "1",
+    "test-strategy": "1",
+    "legacy-code-analysis": "1",
+    "dotnet-development": "1",
+    "java-development": "1",
+    "python-development": "1",
+    "api-development": "1",
+    "database-changes": "1"
+  }
+}

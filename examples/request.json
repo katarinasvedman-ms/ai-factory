@@ -1,0 +1,5 @@
+{
+  "id": "POC-001",
+  "repository": "local:orders-fixture",
+  "description": "Inspect OrderService.NormalizeReference in this .NET application. Propose a minimal change that rejects null, empty, and whitespace-only references with ArgumentException while preserving trimming and upper-casing for valid references. The coder should submit a proposal artifact; the tester should inspect it and propose boundary regression cases. Do not change the database or API. No commands are authorized."
+}

@@ -1,0 +1,18 @@
+{
+  "allowed_skills": [
+    "architecture-analysis",
+    "implementation-planning",
+    "code-review",
+    "test-strategy",
+    "legacy-code-analysis",
+    "dotnet-development",
+    "java-development",
+    "python-development",
+    "api-development",
+    "database-changes"
+  ],
+  "required_skills": {
+    "coder": ["dotnet-development", "test-strategy"],
+    "tester": ["dotnet-development", "test-strategy"]
+  }
+}
