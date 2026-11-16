@@ -1,0 +1,2 @@
+This directory is an incomplete application handoff.
+No source language, project manifest, build instructions or runtime is specified.

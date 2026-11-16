@@ -6,7 +6,7 @@ import pytest
 
 from ai_factory.contracts import CLI_VERSION, FactoryError
 from ai_factory.execution import prepare, verify
-from ai_factory.runtime import WorkerTools, run
+from ai_factory.runtime import SKILL_SELECTION_INSTRUCTIONS, WorkerTools, run
 
 
 @pytest.fixture
@@ -165,6 +165,61 @@ async def test_execution_cannot_change_model_or_run_concurrently(execution):
     (execution / ".worker.lock").write_text("existing-worker")
     with pytest.raises(FactoryError, match="already has a worker"):
         await run(execution, "test-model", client_factory=FakeClient)
+
+
+async def test_all_relevant_changes_only_selection_instruction(execution, tmp_path):
+    FakeClient.observed = []
+    await run(execution, "test-model", roles=["coder"], client_factory=FakeClient)
+    baseline = FakeClient.observed[-1]
+    copy = tmp_path / "comparison"
+    import shutil
+
+    shutil.copytree(execution, copy)
+    (copy / "coder.result.json").unlink()
+    (copy / "runtime.json").unlink()
+    await run(
+        copy,
+        "test-model",
+        roles=["coder"],
+        skill_selection="all-relevant",
+        client_factory=FakeClient,
+    )
+    treatment = FakeClient.observed[-1]
+    common = [
+        row["system_message"]["content"].replace(SKILL_SELECTION_INSTRUCTIONS[mode], "<selection>")
+        for row, mode in ((baseline, "baseline"), (treatment, "all-relevant"))
+    ]
+    assert common[0] == common[1]
+    assert baseline["system_message"]["content"].startswith(
+        "You are the factory coder. Before doing any work, load at least "
+        "one relevant available skill using the native skill tool. "
+    )
+    for key in (
+        "available_tools",
+        "included_builtin_skills",
+        "enable_config_discovery",
+        "enable_file_hooks",
+        "enable_host_git_operations",
+        "mcp_servers",
+    ):
+        assert baseline[key] == treatment[key]
+    assert [tool.name for tool in baseline["tools"]] == [tool.name for tool in treatment["tools"]]
+    with pytest.raises(FactoryError, match="cannot change"):
+        await run(copy, "test-model", roles=["coder"], client_factory=FakeClient)
+
+
+async def test_unknown_or_mismatched_selection_mode_fails_closed(execution):
+    with pytest.raises(FactoryError, match="Unknown skill-selection"):
+        await run(
+            execution, "test-model", skill_selection="unrestricted", client_factory=FakeClient
+        )
+    path = execution / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["runtime"]["skill_selection"] = "all-relevant"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(FactoryError, match="execution pin"):
+        await run(execution, "test-model", client_factory=FakeClient)
+    assert not (execution / "runtime.json").exists()
 
 
 def test_worker_tools_require_actual_native_activation(execution):

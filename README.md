@@ -1,8 +1,8 @@
 # AI factory skills PoC
 
-Python Copilot SDK workers with dynamically selected, reproducible skills from
+Python Copilot SDK workers with versioned skills discovered and loaded from
 GitHub or Microsoft Foundry Toolbox. Skill content lives independently in
-`katarinasvedman-ms/factory-skills`.
+the separate `factory-skills` repository.
 
 The PoC supports architect, planner, coder, reviewer, and tester roles without
 embedding skill names into agent implementations. The first demonstration uses
@@ -10,7 +10,39 @@ coder/tester sessions and a small unmodified .NET/SQL Server fixture. Workers
 read snapshots and create approval-required proposals; they cannot execute
 shell commands, commit, push, deploy, or modify application source.
 
+## Current status (2026-11-16)
+
+The latest recorded live Azure demonstration completed on 2026-11-13. A manually
+triggered **coder-only ACA Job** used managed identity to retrieve skills from
+Foundry in provider mode. Native SDK events confirmed .NET and test-strategy
+activation, an approval-required `OrderService.cs` proposal was produced,
+temporary skill files were removed, and input/target snapshots stayed unchanged.
+Application builds and tests were **NOT RUN**.
+
+| Area | Implemented and demonstrated | Not yet established |
+| --- | --- | --- |
+| Skills lifecycle | Independent skills repo, automatic patch versioning, OIDC publishing and exact release bindings | Automatic adoption by deployed workers or model evaluation of every published version |
+| Registry discovery and loading | All seven coder skills retrieved through the SDK provider using Toolbox v3; verified content in 27 completed local sessions | Production availability; three discovery attempts failed during authentication or timeout |
+| Runtime | Local coder/tester bridge and provider sessions; one live Azure coder execution | All-five-role Azure workflow, concurrent/long-session production reliability |
+| Role access | Five role Toolboxes, distinct local test identities, provider `permitted_skills`; managed identity in the Azure coder job | Toolbox-level authorization isolation; project grants permit cross-Toolbox access |
+| Task result | Controlled proposals, role reports, manifests and native activation evidence | Applying changes, isolated application builds/tests, automated PR creation or ticket integration |
+
+See the [registry validation report](skill-registry-validation-report.md) for
+the discovery, resolution and loading evidence. Its scope is the registry and
+adapter, not which skills the model chooses or the quality of generated code.
+
+The Azure demonstration pinned `coder-skills` version `1`. The latest recorded
+skills CI release pins all five role Toolboxes to version `3`. These are separate
+results: publication does not update an existing worker binding or execution.
+Adopt a selected binding and run a new native evaluation before claiming that
+release's Azure behavior is verified.
+
+Both repositories are published. Retained factory checks and skills publication
+checks passed. This records completed evidence, not a fresh Azure health check.
+
 ## Architecture
+
+The original bridge/local/GitHub preparation path is:
 
 ```text
 Trusted request categories + policy + prepared application checkout
@@ -29,11 +61,19 @@ default Foundry bridge return a verified full snapshot for native
 metadata instead and uses the SDK's native `skill_provider`. Both use the native
 `skill` tool to activate instructions; neither is a custom skill engine.
 
-GitHub retrieval requires an approved full commit SHA. Foundry first verifies
-the exact toolbox version and each immutable skill reference, discovers/reads
-MCP Resources, downloads pinned full ZIP packages, and compares all bytes with
-an operator-approved skills tree before configuring sessions. Generic MCP tool
-support alone is not used as a substitute for skill loading.
+The SDK owns the provider callback interface and native selection/activation/
+loading. Our `ToolboxSkillProvider` implements discovery and retrieval against
+Foundry, including authentication, pins, role filtering and temporary resources.
+Generic SDK MCP configuration does not supply that adapter. Foundry Tool Search
+ranking was not used in the verified path.
+
+GitHub retrieval requires an approved full commit SHA. The default Foundry
+bridge verifies the exact Toolbox version and each immutable skill reference,
+discovers/reads MCP Resources, downloads pinned full ZIP packages, and compares
+all bytes with an operator-approved skills tree before configuring sessions.
+Provider mode instead verifies pinned discovery metadata and fetches only
+activated content without that approved mirror. Generic MCP tool support alone
+is not used as a substitute for skill loading.
 
 ## Local setup and demo
 
@@ -79,7 +119,7 @@ After an approved skills commit exists:
 
 ```powershell
 .\.venv\Scripts\ai-factory.exe prepare --source github `
-  --github-repository katarinasvedman-ms/factory-skills `
+  --github-repository YOUR_ORG/factory-skills `
   --github-commit APPROVED_FULL_COMMIT_SHA `
   --target .\tests\fixtures\orders `
   --request .\examples\request.json --policy .\examples\policy.json
@@ -308,7 +348,21 @@ provider cleanup, and unchanged input and target snapshots. Application builds
 and tests were not run. Environment-specific deployment parameters and evidence
 remain in ignored local `.artifacts\coder-deployment`, not in source control.
 
-## Verified PoC state
+The retained live execution is `015fc0f0-f914-4db8-808e-c137906ed17e`,
+using SDK `1.0.31`, CLI `1.0.109` and `coder-skills` version `1`. Its downloaded
+manifest, native events and proposal are under
+`.artifacts\coder-deployment\download\executions\015fc0f0-f914-4db8-808e-c137906ed17e`;
+`.artifacts\coder-deployment\verification.json` summarizes the checks.
+Managed identity authenticated Foundry access; the Copilot credential was
+supplied separately through Key Vault. No claim is made that managed identity
+authenticates to Copilot.
+
+ACR Tasks provided a successful image-build path despite the earlier local
+Docker TLS failure. That local failure is not a current blocker to the demonstrated
+Azure coder job. This does not establish a deployed tester job, automatic ticket
+dispatch, PR return, or successful application compilation/tests.
+
+## Earlier local evidence (2026-11-12)
 
 On 2026-11-12, local native SDK evaluation passed, and real Foundry publication,
 MCP skill discovery, pinned package downloads, and coder/tester consumption
@@ -324,10 +378,12 @@ Its session temporary folders were removed afterward. The spike is opt-in:
 it fetched fewer distinct skills but more bytes in this small catalog, and
 introduces an activation-time dependency on the preview Toolbox service.
 
-GitHub retrieval has transport/contract tests, but a live skills-repository
-download awaits the first approved commit: both remote repositories were empty
-at the start, and no commits/pushes were performed. CI workflows are provided
-but have not yet run remotely.
+GitHub retrieval has transport/contract tests. The original reports did not
+include a live GitHub resolver session; do not infer one from repository
+publication. Both repositories now contain approved commits and successful
+remote checks, and Foundry publication is automated in `factory-skills`.
+Historical spike/report statements about no pushes or deployments apply only
+to the experiments they describe.
 
 GitHub keeps initial infrastructure minimal. Foundry adds managed Azure
 distribution with preview protocol dependencies. OCI/ACR would suit larger,

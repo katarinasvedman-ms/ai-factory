@@ -1,5 +1,12 @@
 # Per-role identity and Toolbox isolation
 
+> Historical role-isolation experiment (2026-11-12). Version-1 pins and local
+> certificate credentials below describe this experiment, not the latest
+> publisher output. Subsequent CI published role Toolbox v3, and a separate
+> coder-only ACA Job used managed identity with coder Toolbox v1 on 2026-11-13.
+> See the [current README](README.md). These later results do not establish
+> Toolbox-level authorization isolation or deployment of every role.
+
 **[Verified by execution]** Five role toolboxes and five distinct local-test
 service principals were created in the existing project. Coder/tester SDK
 sessions used their own identities and endpoints successfully.

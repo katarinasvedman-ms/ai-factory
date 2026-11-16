@@ -5,6 +5,8 @@ import pytest
 
 from ai_factory.resolvers import LocalResolver
 
+collect_ignore = ["fixtures"]
+
 
 @pytest.fixture
 def library(tmp_path):

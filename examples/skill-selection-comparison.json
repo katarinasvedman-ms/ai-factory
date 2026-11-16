@@ -1,0 +1,9 @@
+{
+  "schema_version": 2,
+  "baseline_matrix": "skill-selection-matrix.json",
+  "baseline_matrix_sha256": "1a95b1714d11f621a99beecbbbf708f985d0f638b5b3e2af0b03151e569d108d",
+  "tasks": {
+    "S3": "Plan an optional reference filter on the existing order HTTP API, preserving its default response contract. Inspect the current endpoint before recommending request shapes, validation/error status and invalid/unauthorized regression cases. Return the plan in your final response only; do not submit any file proposals. Do not change persistence or execute commands.",
+    "S4": "Propose a minimal fix to normalize_reference that rejects non-string values with TypeError and empty or whitespace-only references with ValueError, preserving stripping and upper-casing for valid strings. Follow existing project/test conventions and include boundary regression cases. File proposals may change only the existing orders.py and test_orders.py files. Do not execute commands."
+  }
+}

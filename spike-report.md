@@ -1,5 +1,11 @@
 # Spike: on-demand Toolbox skill provider
 
+> Historical experiment (2026-11-12). The measurements and no-deployment/no-push
+> statements below describe this spike only. Subsequent work published both
+> repositories, automated skills releases and verified a coder-only ACA Job on
+> 2026-11-13. See the [current README](README.md) for that evidence. Bridge is
+> still the default; the provider remains experimental and opt-in.
+
 ## Result and recommendation
 
 **The native provider works with the pinned Python Copilot SDK. Keep it opt-in;

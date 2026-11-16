@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "release": {
+    "repository": "katarinasvedman-ms/factory-skills",
+    "tag": "foundry-43842056109-1",
+    "source_commit": "8486e807960b51b686d06765fd9afb1f54544d23",
+    "binding_sha256": "3099bdc5856e561bdadd686e6487d73ec627625e62e1d62254422a921e96f032"
+  },
+  "evaluation_source": "evaluations.json",
+  "evaluation_sha256": "5753e527c18b1c2c1dc232e11b9e98dfc1bd922bc4af671994ed169989f62837",
+  "role": "coder",
+  "repetitions": 3,
+  "cases": [
+    {
+      "id": "S1",
+      "fixture": "tests/fixtures/orders",
+      "task": "Propose a minimal change to OrderService.NormalizeReference to reject null, empty and whitespace-only references with ArgumentException while preserving trimming and upper-casing for valid references. Include focused regression cases. Do not change the HTTP API or database. No commands are authorized.",
+      "expected": ["dotnet-development", "test-strategy"],
+      "optional": [],
+      "resources": [{"skill": "dotnet-development", "path": "references/validation.md"}],
+      "proposal_paths": ["OrderService.cs"],
+      "proposal_required": true,
+      "obligations": [
+        "Proposal rejects null/empty/whitespace and preserves valid normalization.",
+        "Final response gives observed target framework, nullable setting and project path.",
+        "Proposed regression cases cover invalid boundaries and valid input; execution is NOT RUN."
+      ]
+    },
+    {
+      "id": "S2",
+      "fixture": "tests/fixtures/orders",
+      "task": "Plan adding an optional nullable order note in the SQL Server schema while old application readers remain active. Explain forward steps, partial backfill recovery, locking risks, verification and rollback after new writes. Include regression cases. Do not change C# or API code, connect to a database or execute commands. A source change proposal is not required.",
+      "expected": ["database-changes", "test-strategy"],
+      "optional": ["dotnet-development"],
+      "resources": [{"skill": "database-changes", "path": "references/migrations.md"}],
+      "proposal_paths": ["schema.sql"],
+      "proposal_required": false,
+      "obligations": [
+        "Data safety section covers additive null semantics and old readers.",
+        "Accounts for stopped/partial backfills, locking and data written after migration.",
+        "Gives focused integration verification marked NOT RUN."
+      ]
+    },
+    {
+      "id": "S3",
+      "fixture": "tests/fixtures/orders",
+      "task": "Plan an optional reference filter on the existing order HTTP API, preserving its default response contract. Inspect the current endpoint before recommending request shapes, validation/error status and invalid/unauthorized regression cases. No implementation proposal is required. Do not change persistence or execute commands.",
+      "expected": ["api-development", "dotnet-development", "test-strategy"],
+      "optional": [],
+      "resources": [{"skill": "dotnet-development", "path": "references/validation.md"}],
+      "proposal_paths": [],
+      "proposal_required": false,
+      "obligations": [
+        "Cites actual endpoint and distinguishes current behavior from proposed API changes.",
+        "Preserves default response shape; specifies validation/error and authorization cases.",
+        "Includes observed .NET compatibility evidence and verification marked NOT RUN."
+      ]
+    },
+    {
+      "id": "S4",
+      "fixture": "tests/fixtures/selection/python",
+      "task": "Propose a minimal fix to normalize_reference that rejects non-string values with TypeError and empty or whitespace-only references with ValueError, preserving stripping and upper-casing for valid strings. Follow existing project/test conventions and include boundary regression cases. Do not execute commands.",
+      "expected": ["python-development", "test-strategy"],
+      "optional": [],
+      "resources": [],
+      "proposal_paths": ["orders.py", "test_orders.py"],
+      "proposal_required": true,
+      "obligations": [
+        "Preserves public signature and specified TypeError/ValueError contracts.",
+        "Uses evidenced interpreter/test conventions and covers valid and boundary inputs.",
+        "Proposals are minimal and verification is marked NOT RUN."
+      ]
+    },
+    {
+      "id": "S5",
+      "fixture": "tests/fixtures/selection/java",
+      "task": "Propose a minimal fix to OrderService.normalizeReference that rejects null, empty and whitespace-only references with IllegalArgumentException while preserving valid stripping and upper-casing. Respect the configured Java release and include focused regression cases using the existing test conventions. Do not execute commands.",
+      "expected": ["java-development", "test-strategy"],
+      "optional": [],
+      "resources": [],
+      "proposal_paths": ["src/main/java/example/OrderService.java", "src/test/java/example/OrderServiceTest.java"],
+      "proposal_required": true,
+      "obligations": [
+        "Preserves public signature, valid normalization and specified exception contract.",
+        "Respects configured Java release and existing JUnit conventions.",
+        "Gives concrete boundary regressions and marks execution NOT RUN."
+      ]
+    },
+    {
+      "id": "S6",
+      "fixture": "tests/fixtures/selection/unknown",
+      "task": "Determine whether the supplied repository identifies a programming language or build system. If the evidence is insufficient, explain that limitation and what additional files are needed. Do not assume a technology, propose code, design tests or execute commands.",
+      "expected": [],
+      "optional": [],
+      "resources": [],
+      "proposal_paths": [],
+      "proposal_required": false,
+      "obligations": [
+        "Does not invent a language, runtime, build system or source behavior.",
+        "Explains missing evidence and requests specific project/source files.",
+        "Does not activate an unrelated skill merely to bypass the mandatory-activation gate."
+      ]
+    }
+  ]
+}
